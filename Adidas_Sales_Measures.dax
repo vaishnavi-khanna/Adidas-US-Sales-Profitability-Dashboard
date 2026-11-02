@@ -1,0 +1,60 @@
+// Measures for the existing table: 'Data Sales Adidas'.
+// Add a DimDate table and relate DimDate[Date] (one) to
+// 'Data Sales Adidas'[Invoice Date] (many) before using time intelligence.
+
+Total Sales =
+SUM ( 'Data Sales Adidas'[Total Sales] )
+
+Operating Profit =
+SUM ( 'Data Sales Adidas'[Operating Profit] )
+
+Units Sold =
+SUM ( 'Data Sales Adidas'[Units Sold] )
+
+Operating Margin % =
+DIVIDE ( [Operating Profit], [Total Sales] )
+
+Revenue per Unit =
+DIVIDE ( [Total Sales], [Units Sold] )
+
+Profit per Unit =
+DIVIDE ( [Operating Profit], [Units Sold] )
+
+Sales Rows =
+COUNTROWS ( 'Data Sales Adidas' )
+
+Sales Previous Year =
+CALCULATE (
+    [Total Sales],
+    DATEADD ( 'DimDate'[Date], -1, YEAR )
+)
+
+Sales YoY Change =
+[Total Sales] - [Sales Previous Year]
+
+Sales YoY % =
+DIVIDE ( [Sales YoY Change], [Sales Previous Year] )
+
+Profit Previous Year =
+CALCULATE (
+    [Operating Profit],
+    DATEADD ( 'DimDate'[Date], -1, YEAR )
+)
+
+Profit YoY % =
+DIVIDE ( [Operating Profit] - [Profit Previous Year], [Profit Previous Year] )
+
+// Create this as a calculated table, mark it as the model's date table,
+// then sort DimDate[Month Name] by DimDate[Month Number].
+DimDate =
+VAR FirstDate = MIN ( 'Data Sales Adidas'[Invoice Date] )
+VAR LastDate = MAX ( 'Data Sales Adidas'[Invoice Date] )
+RETURN
+    ADDCOLUMNS (
+        CALENDAR ( DATE ( YEAR ( FirstDate ), 1, 1 ), DATE ( YEAR ( LastDate ), 12, 31 ) ),
+        "Year", YEAR ( [Date] ),
+        "Quarter", "Q" & FORMAT ( [Date], "Q" ),
+        "Month Number", MONTH ( [Date] ),
+        "Month Name", FORMAT ( [Date], "MMM" ),
+        "Year Month", FORMAT ( [Date], "YYYY-MM" )
+    )
